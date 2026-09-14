@@ -34,17 +34,33 @@ jobs:
           unzip -q gradle-8.2-bin.zip
           echo "$GITHUB_WORKSPACE/gradle-8.2/bin" >> $GITHUB_PATH
 
+      - name: Generate signing keystore
+        run: |
+          keytool -genkeypair -v \
+            -keystore release.keystore \
+            -storepass apkpengingat123 -keypass apkpengingat123 \
+            -alias apk_pengingat -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Pengingat Kendaraan, OU=Personal, O=ApkPengingat, L=Jakarta, ST=DKI, C=ID"
+          printf 'storeFile=release.keystore\nstorePassword=apkpengingat123\nkeyAlias=apk_pengingat\nkeyPassword=apkpengingat123\n' > keystore.properties
+
       - name: Build Debug APK
         run: gradle --no-daemon assembleDebug
+
+      - name: Build Release APK
+        run: gradle --no-daemon assembleRelease
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: apk-pengingat
-          path: app/build/outputs/apk/debug/*.apk
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/app-release.apk
 
       - name: Create GitHub Release (on tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/debug/*.apk
+          files: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/app-release.apk
