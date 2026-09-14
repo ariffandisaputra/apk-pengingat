@@ -65,8 +65,8 @@ dependencies {
 
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
-    implementation("com.google.android.glance:glance-appwidget:1.0.0")
-    implementation("com.google.android.glance:glance-material3:1.0.0")
+    implementation("androidx.glance:glance-appwidget:1.1.1")
+    implementation("androidx.glance:glance-material3:1.1.1")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
