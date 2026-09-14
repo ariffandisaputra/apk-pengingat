@@ -2,6 +2,8 @@ package com.example.apk_pengingat.widget
 
 import android.content.Context
 import android.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.GlanceAppWidget
@@ -18,8 +20,6 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import androidx.glance.unit.dp
-import androidx.glance.unit.sp
 import com.example.apk_pengingat.data.db.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -78,9 +78,9 @@ class ReminderWidget : GlanceAppWidget() {
                             text = "${index + 1}. ${reminder.title}",
                             style = TextStyle(
                                 color = ColorProvider(Color.WHITE),
-                                fontSize = 12.sp
-                            ),
-                            fontWeight = FontWeight.Medium
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
                         )
                         Text(
                             text = "   ${formatter.format(reminder.expiryDate)}",

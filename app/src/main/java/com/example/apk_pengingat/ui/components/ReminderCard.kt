@@ -22,6 +22,7 @@ import com.example.apk_pengingat.ui.theme.Red400
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderCard(
     reminder: Reminder,
