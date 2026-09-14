@@ -39,7 +39,7 @@ class ReminderWidget : GlanceAppWidget() {
             Column(
                 modifier = GlanceModifier
                     .fillMaxSize()
-                    .background(color = ColorProvider(Color.parseColor("#1976D2")))
+                    .background(ColorProvider(Color.parseColor("#1976D2")))
                     .padding(12.dp),
                 verticalAlignment = Alignment.Vertical.Top
             ) {
