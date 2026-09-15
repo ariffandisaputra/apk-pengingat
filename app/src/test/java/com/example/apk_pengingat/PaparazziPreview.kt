@@ -1,6 +1,5 @@
 package com.example.apk_pengingat
 
-import androidx.test.core.app.ApplicationProvider
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import com.example.apk_pengingat.data.model.Reminder
@@ -16,6 +15,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.robolectric.RuntimeEnvironment
 import java.time.LocalDate
 
 private class FakeRepository(private val active: List<Reminder> = emptyList()) : ReminderRepository {
@@ -61,7 +61,7 @@ class PaparazziPreview {
     )
 
     private val app: android.app.Application by lazy {
-        ApplicationProvider.getApplicationContext()
+        RuntimeEnvironment.getApplication()
     }
 
     private val sampleData = listOf(
