@@ -20,7 +20,7 @@ android {
         applicationId = "com.example.apk_pengingat"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = "1.0"
     }
 

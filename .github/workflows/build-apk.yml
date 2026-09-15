@@ -34,20 +34,38 @@ jobs:
           unzip -q gradle-8.2-bin.zip
           echo "$GITHUB_WORKSPACE/gradle-8.2/bin" >> $GITHUB_PATH
 
-      - name: Generate signing keystore
+      - name: Generate signing keystore (sekali saja)
         run: |
-          keytool -genkeypair -v \
-            -keystore release.keystore \
-            -storepass apkpengingat123 -keypass apkpengingat123 \
-            -alias apk_pengingat -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=Pengingat Kendaraan, OU=Personal, O=ApkPengingat, L=Jakarta, ST=DKI, C=ID"
+          if [ ! -f release.keystore ]; then
+            keytool -genkeypair -v \
+              -keystore release.keystore \
+              -storepass apkpengingat123 -keypass apkpengingat123 \
+              -alias apk_pengingat -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Pengingat Kendaraan, OU=Personal, O=ApkPengingat, L=Jakarta, ST=DKI, C=ID"
+          fi
           printf 'storeFile=release.keystore\nstorePassword=apkpengingat123\nkeyAlias=apk_pengingat\nkeyPassword=apkpengingat123\n' > keystore.properties
 
       - name: Build Debug APK
+        env:
+          VERSION_CODE: ${{ github.run_number }}
         run: gradle --no-daemon assembleDebug
 
       - name: Build Release APK
+        env:
+          VERSION_CODE: ${{ github.run_number }}
         run: gradle --no-daemon assembleRelease
+
+      - name: Simpan keystore ke repo (pertama kali saja)
+        run: |
+          if git status --porcelain | grep -q 'release.keystore'; then
+            git config user.email "actions@github.com"
+            git config user.name "github-actions[bot]"
+            git add release.keystore
+            git commit -m "chore: simpan kunci tanda tangan permanen"
+            git push
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
