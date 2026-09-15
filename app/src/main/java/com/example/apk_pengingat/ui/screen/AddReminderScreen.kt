@@ -36,13 +36,14 @@ import java.util.Locale
 fun AddReminderScreen(
     viewModel: ReminderViewModel,
     existingReminder: Reminder? = null,
+    initialType: ReminderType = ReminderType.PAJAK_TAHUNAN,
     onSave: () -> Unit,
     onBack: () -> Unit
 ) {
     var type by remember {
         mutableStateOf(
             existingReminder?.type?.let { if (it == ReminderType.PAJAK_5TAHUN) ReminderType.PAJAK_TAHUNAN else it }
-                ?: ReminderType.PAJAK_TAHUNAN
+                ?: initialType
         )
     }
     var title by remember { mutableStateOf(existingReminder?.title.orEmpty()) }

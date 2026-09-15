@@ -1,31 +1,20 @@
 package com.example.apk_pengingat.data.repository
 
-import com.example.apk_pengingat.data.db.ReminderDao
 import com.example.apk_pengingat.data.model.Reminder
 import kotlinx.coroutines.flow.Flow
 
-class ReminderRepository(private val reminderDao: ReminderDao) {
+interface ReminderRepository {
 
-    val activeReminders: Flow<List<Reminder>> = reminderDao.getActiveReminders()
-    val completedReminders: Flow<List<Reminder>> = reminderDao.getCompletedReminders()
+    val activeReminders: Flow<List<Reminder>>
+    val completedReminders: Flow<List<Reminder>>
 
-    suspend fun insert(reminder: Reminder): Long {
-        return reminderDao.insertReminder(reminder)
-    }
+    suspend fun insert(reminder: Reminder): Long
 
-    suspend fun update(reminder: Reminder) {
-        reminderDao.updateReminder(reminder)
-    }
+    suspend fun update(reminder: Reminder)
 
-    suspend fun delete(reminder: Reminder) {
-        reminderDao.deleteReminder(reminder)
-    }
+    suspend fun delete(reminder: Reminder)
 
-    suspend fun markCompleted(id: Long) {
-        reminderDao.markCompleted(id)
-    }
+    suspend fun markCompleted(id: Long)
 
-    suspend fun getById(id: Long): Reminder? {
-        return reminderDao.getReminderById(id)
-    }
+    suspend fun getById(id: Long): Reminder?
 }

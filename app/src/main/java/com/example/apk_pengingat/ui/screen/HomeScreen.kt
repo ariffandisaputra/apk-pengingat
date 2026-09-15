@@ -47,6 +47,28 @@ fun HomeScreen(
 ) {
     val reminders by viewModel.activeReminders.collectAsState()
 
+    HomeScreenContent(
+        reminders = reminders,
+        themeMode = themeMode,
+        onToggleTheme = onToggleTheme,
+        onAddReminder = onAddReminder,
+        onEditReminder = onEditReminder,
+        onOpenHistory = onOpenHistory,
+        onComplete = { viewModel.markCompleted(it) }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreenContent(
+    reminders: List<Reminder>,
+    themeMode: ThemeMode,
+    onToggleTheme: () -> Unit,
+    onAddReminder: () -> Unit,
+    onEditReminder: (Reminder) -> Unit,
+    onOpenHistory: () -> Unit,
+    onComplete: (Reminder) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -173,7 +195,7 @@ fun HomeScreen(
                     items(group, key = { it.id }) { reminder ->
                         ReminderCard(
                             reminder = reminder,
-                            onComplete = { viewModel.markCompleted(reminder) },
+                            onComplete = { onComplete(reminder) },
                             onClick = { onEditReminder(reminder) }
                         )
                     }

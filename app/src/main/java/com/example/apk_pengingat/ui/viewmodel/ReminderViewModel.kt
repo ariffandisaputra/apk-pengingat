@@ -7,6 +7,7 @@ import com.example.apk_pengingat.data.db.AppDatabase
 import com.example.apk_pengingat.data.model.Reminder
 import com.example.apk_pengingat.data.model.typeOrder
 import com.example.apk_pengingat.data.repository.ReminderRepository
+import com.example.apk_pengingat.data.repository.RoomReminderRepository
 import com.example.apk_pengingat.service.AlarmScheduler
 import com.example.apk_pengingat.service.NotificationHelper
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,10 +16,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class ReminderViewModel(application: Application) : AndroidViewModel(application) {
+class ReminderViewModel(
+    application: Application,
+    private val repository: ReminderRepository
+) : AndroidViewModel(application) {
 
-    private val repository = ReminderRepository(
-        AppDatabase.getDatabase(application).reminderDao()
+    constructor(application: Application) : this(
+        application,
+        RoomReminderRepository(AppDatabase.getDatabase(application).reminderDao())
     )
 
     private val appContext = application.applicationContext
