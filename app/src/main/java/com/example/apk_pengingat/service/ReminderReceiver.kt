@@ -30,10 +30,13 @@ class ReminderReceiver : BroadcastReceiver() {
                 val lastSvc = reminder.lastServiceDate?.toString() ?: "-"
                 val lastKm = reminder.lastServiceKm?.toString() ?: "-"
                 val serviceInfo = "Service terakhir: $lastSvc | $lastKm km"
+                val detailLine = if (reminder.detailNote.isNotBlank()) {
+                    "\nCatatan: ${reminder.detailNote}"
+                } else ""
                 val biayaLine = if (reminder.biaya > 0) {
                     " | Biaya: Rp " + java.text.NumberFormat.getNumberInstance(java.util.Locale("id", "ID")).format(reminder.biaya)
                 } else ""
-                "$serviceInfo$biayaLine\nJatuh tempo: ${reminder.expiryDate}\n$sequence"
+                "$serviceInfo$biayaLine$detailLine\nJatuh tempo: ${reminder.expiryDate}\n$sequence"
             } else {
                 val base = NotificationHelper.buildNotificationMessage(
                     note = reminder.note,

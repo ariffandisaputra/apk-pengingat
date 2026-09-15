@@ -56,6 +56,7 @@ fun AddReminderScreen(
     var biaya by remember {
         mutableStateOf(existingReminder?.biaya?.takeIf { it > 0 }?.toString().orEmpty())
     }
+    var detailNote by remember { mutableStateOf(existingReminder?.detailNote.orEmpty()) }
     var isPlateRenewal by remember {
         mutableStateOf(existingReminder?.isPlateRenewal ?: (existingReminder?.type == ReminderType.PAJAK_5TAHUN))
     }
@@ -64,7 +65,18 @@ fun AddReminderScreen(
     var serviceDatePickerVisible by remember { mutableStateOf(false) }
 
     val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("id", "ID"))
-    val expiryLabel = if (type == ReminderType.SERVICE) "Tanggal Service Berikutnya *" else "Tanggal Jatuh Tempo *"
+    val expiryLabel = when (type) {
+        ReminderType.SERVICE -> "Tanggal Jatuh Tempo Service *"
+        else -> "Tanggal Jatuh Tempo *"
+    }
+    val infoFieldLabel = when (type) {
+        ReminderType.SIM -> "Jenis SIM (kelas)"
+        else -> "Plat Nomor"
+    }
+    val infoPlaceholder = when (type) {
+        ReminderType.SIM -> "Contoh: SIM C"
+        else -> "Contoh: B 1234 X"
+    }
     val formattedBiayaPreview = biaya.toLongOrNull()?.takeIf { it > 0 }?.let { formatRupiah(it) }
 
     Scaffold(
@@ -90,6 +102,7 @@ fun AddReminderScreen(
                                     lastServiceKm = if (type == ReminderType.SERVICE) serviceKm.toIntOrNull() else null,
                                     biaya = biaya.toLongOrNull() ?: 0,
                                     isPlateRenewal = if (type == ReminderType.PAJAK_TAHUNAN) isPlateRenewal else false,
+                                    detailNote = if (type == ReminderType.SERVICE) detailNote.trim() else "",
                                     isCompleted = existingReminder?.isCompleted ?: false,
                                     createdAt = existingReminder?.createdAt ?: LocalDate.now()
                                 )
@@ -190,7 +203,8 @@ fun AddReminderScreen(
             OutlinedTextField(
                 value = note,
                 onValueChange = { note = it.uppercase() },
-                label = { Text("Catatan (plat nomor, dll) — huruf besar otomatis") },
+                label = { Text(infoFieldLabel) },
+                placeholder = { Text(infoPlaceholder) },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -272,7 +286,7 @@ fun AddReminderScreen(
                     value = serviceDate?.let { dateFormatter.format(it) }.orEmpty(),
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Tanggal Service Terakhir (opsional)") },
+                    label = { Text("Tanggal Terakhir Service (opsional)") },
                     trailingIcon = {
                         IconButton(onClick = { serviceDatePickerVisible = true }) {
                             Icon(Icons.Default.CalendarMonth, contentDescription = "Pilih tanggal service terakhir")
@@ -290,6 +304,16 @@ fun AddReminderScreen(
                     placeholder = { Text("Contoh: 45000") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = detailNote,
+                    onValueChange = { detailNote = it },
+                    label = { Text("Catatan Service (apa saja yang di-service)") },
+                    placeholder = { Text("Contoh: ganti oli, filter, tune up") },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 val nextSvcDate = serviceDate?.plusMonths(6)

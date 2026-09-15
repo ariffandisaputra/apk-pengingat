@@ -69,6 +69,16 @@ fun ReminderCard(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
+                if (reminder.type == ReminderType.SERVICE && reminder.detailNote.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Catatan: ${reminder.detailNote}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 if (reminder.type == ReminderType.SERVICE &&
                     (reminder.lastServiceDate != null || reminder.lastServiceKm != null)
                 ) {
