@@ -23,10 +23,16 @@ class ReminderReceiver : BroadcastReceiver() {
             if (reminder == null) return@launch
 
             val title = NotificationHelper.buildNotificationTitle(reminder.type)
-            val message = NotificationHelper.buildNotificationMessage(
-                reminder.note,
-                reminder.expiryDate.toString()
-            )
+            val message = if (reminder.type == ReminderType.SERVICE) {
+                val lastSvc = reminder.lastServiceDate?.toString() ?: "-"
+                val lastKm = reminder.lastServiceKm?.toString() ?: "-"
+                "Service terakhir: $lastSvc | $lastKm km\nJatuh tempo: ${reminder.expiryDate}"
+            } else {
+                NotificationHelper.buildNotificationMessage(
+                    reminder.note,
+                    reminder.expiryDate.toString()
+                )
+            }
 
             NotificationHelper.createNotificationChannel(context)
             NotificationHelper.showReminderNotification(context, reminderId, title, message)

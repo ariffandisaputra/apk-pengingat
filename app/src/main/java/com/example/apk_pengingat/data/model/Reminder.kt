@@ -13,6 +13,8 @@ data class Reminder(
     val note: String = "",
     val expiryDate: LocalDate,
     val reminderDaysBefore: Int = 30,
+    val lastServiceDate: LocalDate? = null,
+    val lastServiceKm: Int? = null,
     val isCompleted: Boolean = false,
     val createdAt: LocalDate = LocalDate.now()
 )

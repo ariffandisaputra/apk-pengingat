@@ -20,7 +20,9 @@ import com.example.apk_pengingat.ui.theme.Green400
 import com.example.apk_pengingat.ui.theme.Orange500
 import com.example.apk_pengingat.ui.theme.Red400
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +59,21 @@ fun ReminderCard(
                     Text(
                         text = reminder.note,
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (reminder.type == ReminderType.SERVICE &&
+                    (reminder.lastServiceDate != null || reminder.lastServiceKm != null)
+                ) {
+                    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("id", "ID"))
+                    val lastDate = reminder.lastServiceDate?.format(formatter) ?: "-"
+                    val lastKm = reminder.lastServiceKm?.toString() ?: "-"
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Service: $lastDate | $lastKm km",
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis

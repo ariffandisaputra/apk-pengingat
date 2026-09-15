@@ -35,10 +35,14 @@ fun AddReminderScreen(
         mutableStateOf(existingReminder?.expiryDate ?: LocalDate.now().plusMonths(1))
     }
     var daysBefore by remember { mutableStateOf(existingReminder?.reminderDaysBefore?.toString() ?: "30") }
+    var serviceDate by remember { mutableStateOf(existingReminder?.lastServiceDate) }
+    var serviceKm by remember { mutableStateOf(existingReminder?.lastServiceKm?.toString().orEmpty()) }
     var error by remember { mutableStateOf<String?>(null) }
     var datePickerVisible by remember { mutableStateOf(false) }
+    var serviceDatePickerVisible by remember { mutableStateOf(false) }
 
     val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("id", "ID"))
+    val expiryLabel = if (type == ReminderType.SERVICE) "Tanggal Service Berikutnya *" else "Tanggal Jatuh Tempo *"
 
     Scaffold(
         topBar = {
@@ -59,6 +63,8 @@ fun AddReminderScreen(
                                     note = note.trim(),
                                     expiryDate = selectedDate,
                                     reminderDaysBefore = daysBefore.toIntOrNull() ?: 30,
+                                    lastServiceDate = if (type == ReminderType.SERVICE) serviceDate else null,
+                                    lastServiceKm = if (type == ReminderType.SERVICE) serviceKm.toIntOrNull() else null,
                                     isCompleted = existingReminder?.isCompleted ?: false,
                                     createdAt = existingReminder?.createdAt ?: LocalDate.now()
                                 )
@@ -135,7 +141,7 @@ fun AddReminderScreen(
                 value = dateFormatter.format(selectedDate),
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Tanggal Jatuh Tempo *") },
+                label = { Text(expiryLabel) },
                 trailingIcon = {
                     IconButton(onClick = { datePickerVisible = true }) {
                         Icon(Icons.Default.CalendarMonth, contentDescription = "Pilih tanggal")
@@ -145,6 +151,51 @@ fun AddReminderScreen(
             )
 
             Spacer(modifier = Modifier.height(12.dp))
+
+            if (type == ReminderType.SERVICE) {
+                OutlinedTextField(
+                    value = serviceDate?.let { dateFormatter.format(it) }.orEmpty(),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Tanggal Service Terakhir (opsional)") },
+                    trailingIcon = {
+                        IconButton(onClick = { serviceDatePickerVisible = true }) {
+                            Icon(Icons.Default.CalendarMonth, contentDescription = "Pilih tanggal service terakhir")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = serviceKm,
+                    onValueChange = { serviceKm = it.filter { c -> c.isDigit() } },
+                    label = { Text("KM Terakhir (opsional)") },
+                    placeholder = { Text("Contoh: 45000") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+
+                val nextSvcDate = serviceDate?.plusMonths(6)
+                val nextSvcKm = serviceKm.toIntOrNull()?.plus(10000)
+                if (nextSvcDate != null || nextSvcKm != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = buildString {
+                            append("Saran service berikutnya: ")
+                            val parts = mutableListOf<String>()
+                            nextSvcDate?.let { parts.add(dateFormatter.format(it)) }
+                            nextSvcKm?.let { parts.add("$it km") }
+                            append(parts.joinToString(" atau "))
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             OutlinedTextField(
                 value = daysBefore,
@@ -203,6 +254,38 @@ fun AddReminderScreen(
             },
             dismissButton = {
                 TextButton(onClick = { datePickerVisible = false }) { Text("Batal") }
+            }
+        ) {
+            DatePicker(state = pickerState)
+        }
+    }
+
+    if (serviceDatePickerVisible) {
+        val initialMillis = (serviceDate ?: LocalDate.now())
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
+        val pickerState = rememberDatePickerState(
+            initialSelectedDateMillis = initialMillis
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { serviceDatePickerVisible = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    pickerState.selectedDateMillis?.let { millis ->
+                        val picked = convertPickerMillisToLocalDate(millis)
+                        serviceDate = picked
+                        if (existingReminder == null && selectedDate == LocalDate.now().plusMonths(1)) {
+                            selectedDate = picked.plusMonths(6)
+                        }
+                    }
+                    serviceDatePickerVisible = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { serviceDatePickerVisible = false }) { Text("Batal") }
             }
         ) {
             DatePicker(state = pickerState)
