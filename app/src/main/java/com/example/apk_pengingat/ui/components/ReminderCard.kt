@@ -23,6 +23,7 @@ import com.example.apk_pengingat.ui.theme.Blue400
 import com.example.apk_pengingat.ui.theme.Green400
 import com.example.apk_pengingat.ui.theme.Orange500
 import com.example.apk_pengingat.ui.theme.Red400
+import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -82,6 +83,39 @@ fun ReminderCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                }
+                if (reminder.type == ReminderType.PAJAK_TAHUNAN && reminder.isPlateRenewal) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Orange500.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = "Ganti Plat",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Orange500,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                if (reminder.biaya > 0) {
+                    val biayaText = "Rp " + NumberFormat.getNumberInstance(Locale("id", "ID")).format(reminder.biaya)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Payments,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Biaya: $biayaText",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 DaysLeftText(daysLeft)

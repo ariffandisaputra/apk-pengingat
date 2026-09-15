@@ -66,20 +66,35 @@ object NotificationHelper {
             .notify(NOTIFICATION_ID_BASE + reminderId.toInt() * 10 + alertIndex, notification)
     }
 
-    fun buildNotificationTitle(type: ReminderType): String {
+    fun buildNotificationTitle(type: ReminderType, isPlateRenewal: Boolean = false): String {
         return when (type) {
             ReminderType.SIM -> "SIM akan berakhir!"
-            ReminderType.PAJAK_TAHUNAN -> "Pajak tahunan jatuh tempo!"
-            ReminderType.PAJAK_5TAHUN -> "Pajak 5 tahunan akan jatuh tempo!"
+            ReminderType.PAJAK_TAHUNAN ->
+                if (isPlateRenewal) "Pajak tahunan + ganti plat STNK!"
+                else "Pajak tahunan jatuh tempo!"
+            ReminderType.PAJAK_5TAHUN -> "Perpanjangan STNK 5 tahunan!"
             ReminderType.SERVICE -> "Waktunya service kendaraan!"
         }
     }
 
-    fun buildNotificationMessage(note: String, expiryDate: String): String {
-        return if (note.isNotBlank()) {
-            "$note\nJatuh tempo: $expiryDate"
-        } else {
-            "Jadwal jatuh tempo: $expiryDate"
+    fun buildNotificationMessage(
+        note: String,
+        expiryDate: String,
+        biaya: Long = 0,
+        isPlateRenewal: Boolean = false
+    ): String {
+        val sb = StringBuilder()
+        if (note.isNotBlank()) {
+            sb.append(note).append('\n')
         }
+        sb.append("Jatuh tempo: ").append(expiryDate)
+        if (isPlateRenewal) {
+            sb.append("\nJangan lupa GANTI PLAT (STNK) + cek fisik!")
+        }
+        if (biaya > 0) {
+            val formatted = "Rp " + java.text.NumberFormat.getNumberInstance(java.util.Locale("id", "ID")).format(biaya)
+            sb.append("\nBiaya: ").append(formatted)
+        }
+        return sb.toString()
     }
 }

@@ -24,15 +24,22 @@ class ReminderReceiver : BroadcastReceiver() {
 
             if (reminder == null) return@launch
 
-            val title = NotificationHelper.buildNotificationTitle(reminder.type)
+            val isPlateRenewal = reminder.type == ReminderType.PAJAK_TAHUNAN && reminder.isPlateRenewal
+            val title = NotificationHelper.buildNotificationTitle(reminder.type, isPlateRenewal)
             val message = if (reminder.type == ReminderType.SERVICE) {
                 val lastSvc = reminder.lastServiceDate?.toString() ?: "-"
                 val lastKm = reminder.lastServiceKm?.toString() ?: "-"
-                "Service terakhir: $lastSvc | $lastKm km\nJatuh tempo: ${reminder.expiryDate}\n$sequence"
+                val serviceInfo = "Service terakhir: $lastSvc | $lastKm km"
+                val biayaLine = if (reminder.biaya > 0) {
+                    " | Biaya: Rp " + java.text.NumberFormat.getNumberInstance(java.util.Locale("id", "ID")).format(reminder.biaya)
+                } else ""
+                "$serviceInfo$biayaLine\nJatuh tempo: ${reminder.expiryDate}\n$sequence"
             } else {
                 val base = NotificationHelper.buildNotificationMessage(
-                    reminder.note,
-                    reminder.expiryDate.toString()
+                    note = reminder.note,
+                    expiryDate = reminder.expiryDate.toString(),
+                    biaya = reminder.biaya,
+                    isPlateRenewal = isPlateRenewal
                 )
                 "$base\n$sequence"
             }

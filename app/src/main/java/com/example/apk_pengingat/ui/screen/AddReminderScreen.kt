@@ -23,7 +23,9 @@ import com.example.apk_pengingat.data.model.Reminder
 import com.example.apk_pengingat.data.model.ReminderType
 import com.example.apk_pengingat.data.model.description
 import com.example.apk_pengingat.data.model.label
+import com.example.apk_pengingat.data.model.toTitleCase
 import com.example.apk_pengingat.ui.viewmodel.ReminderViewModel
+import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -37,7 +39,12 @@ fun AddReminderScreen(
     onSave: () -> Unit,
     onBack: () -> Unit
 ) {
-    var type by remember { mutableStateOf(existingReminder?.type ?: ReminderType.PAJAK_TAHUNAN) }
+    var type by remember {
+        mutableStateOf(
+            existingReminder?.type?.let { if (it == ReminderType.PAJAK_5TAHUN) ReminderType.PAJAK_TAHUNAN else it }
+                ?: ReminderType.PAJAK_TAHUNAN
+        )
+    }
     var title by remember { mutableStateOf(existingReminder?.title.orEmpty()) }
     var note by remember { mutableStateOf(existingReminder?.note.orEmpty()) }
     var selectedDate by remember {
@@ -46,12 +53,19 @@ fun AddReminderScreen(
     var daysBefore by remember { mutableStateOf(existingReminder?.reminderDaysBefore?.toString() ?: "30") }
     var serviceDate by remember { mutableStateOf(existingReminder?.lastServiceDate) }
     var serviceKm by remember { mutableStateOf(existingReminder?.lastServiceKm?.toString().orEmpty()) }
+    var biaya by remember {
+        mutableStateOf(existingReminder?.biaya?.takeIf { it > 0 }?.toString().orEmpty())
+    }
+    var isPlateRenewal by remember {
+        mutableStateOf(existingReminder?.isPlateRenewal ?: (existingReminder?.type == ReminderType.PAJAK_5TAHUN))
+    }
     var error by remember { mutableStateOf<String?>(null) }
     var datePickerVisible by remember { mutableStateOf(false) }
     var serviceDatePickerVisible by remember { mutableStateOf(false) }
 
     val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("id", "ID"))
     val expiryLabel = if (type == ReminderType.SERVICE) "Tanggal Service Berikutnya *" else "Tanggal Jatuh Tempo *"
+    val formattedBiayaPreview = biaya.toLongOrNull()?.takeIf { it > 0 }?.let { formatRupiah(it) }
 
     Scaffold(
         topBar = {
@@ -68,12 +82,14 @@ fun AddReminderScreen(
                                 val reminder = Reminder(
                                     id = existingReminder?.id ?: 0,
                                     type = type,
-                                    title = title.trim(),
-                                    note = note.trim(),
+                                    title = title.trim().toTitleCase(),
+                                    note = note.trim().uppercase(),
                                     expiryDate = selectedDate,
                                     reminderDaysBefore = daysBefore.toIntOrNull() ?: 30,
                                     lastServiceDate = if (type == ReminderType.SERVICE) serviceDate else null,
                                     lastServiceKm = if (type == ReminderType.SERVICE) serviceKm.toIntOrNull() else null,
+                                    biaya = biaya.toLongOrNull() ?: 0,
+                                    isPlateRenewal = if (type == ReminderType.PAJAK_TAHUNAN) isPlateRenewal else false,
                                     isCompleted = existingReminder?.isCompleted ?: false,
                                     createdAt = existingReminder?.createdAt ?: LocalDate.now()
                                 )
@@ -100,7 +116,9 @@ fun AddReminderScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             FlowRow {
-                ReminderType.entries.forEach { typeOption ->
+                ReminderType.entries
+                    .filter { it != ReminderType.PAJAK_5TAHUN }
+                    .forEach { typeOption ->
                     val label = typeOption.label
                     val icon = when (typeOption) {
                         ReminderType.SIM -> Icons.Default.Badge
@@ -152,7 +170,7 @@ fun AddReminderScreen(
 
             OutlinedTextField(
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = { title = it.toTitleCase() },
                 label = { Text("Judul *") },
                 placeholder = {
                     Text(
@@ -171,10 +189,66 @@ fun AddReminderScreen(
 
             OutlinedTextField(
                 value = note,
-                onValueChange = { note = it },
-                label = { Text("Catatan (plat nomor, dll)") },
+                onValueChange = { note = it.uppercase() },
+                label = { Text("Catatan (plat nomor, dll) — huruf besar otomatis") },
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (type == ReminderType.PAJAK_TAHUNAN) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = isPlateRenewal,
+                                onCheckedChange = { isPlateRenewal = it }
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                "Pajak 5 tahunan (ganti plat STNK)",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        Text(
+                            text = "Centang jika ini tahun ke-5 / perpanjangan STNK. Notifikasi akan menyebut 'ganti plat'.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 16.dp, end = 12.dp, bottom = 10.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            OutlinedTextField(
+                value = biaya,
+                onValueChange = { biaya = it.filter { c -> c.isDigit() } },
+                label = { Text("Biaya (Rp, opsional)") },
+                placeholder = { Text("Contoh: 750000") },
+                leadingIcon = {
+                    Icon(Icons.Default.Payments, contentDescription = null)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
+            if (formattedBiayaPreview != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "≈ $formattedBiayaPreview",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -361,4 +435,8 @@ private fun convertPickerMillisToLocalDate(millis: Long): LocalDate {
     return java.time.Instant.ofEpochMilli(millis)
         .atZone(ZoneId.systemDefault())
         .toLocalDate()
+}
+
+private fun formatRupiah(value: Long): String {
+    return "Rp " + NumberFormat.getNumberInstance(Locale("id", "ID")).format(value)
 }

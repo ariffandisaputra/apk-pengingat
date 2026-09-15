@@ -5,11 +5,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.apk_pengingat.data.db.AppDatabase
 import com.example.apk_pengingat.data.model.Reminder
+import com.example.apk_pengingat.data.model.typeOrder
 import com.example.apk_pengingat.data.repository.ReminderRepository
 import com.example.apk_pengingat.service.AlarmScheduler
 import com.example.apk_pengingat.service.NotificationHelper
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -22,6 +24,11 @@ class ReminderViewModel(application: Application) : AndroidViewModel(application
     private val appContext = application.applicationContext
 
     val activeReminders: StateFlow<List<Reminder>> = repository.activeReminders
+        .map { list ->
+            list.sortedWith(
+                compareBy({ it.type.typeOrder }, { it.expiryDate })
+            )
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val completedReminders: StateFlow<List<Reminder>> = repository.completedReminders

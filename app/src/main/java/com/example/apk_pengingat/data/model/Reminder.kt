@@ -15,6 +15,8 @@ data class Reminder(
     val reminderDaysBefore: Int = 30,
     val lastServiceDate: LocalDate? = null,
     val lastServiceKm: Int? = null,
+    val biaya: Long = 0,
+    val isPlateRenewal: Boolean = false,
     val isCompleted: Boolean = false,
     val createdAt: LocalDate = LocalDate.now()
 )
