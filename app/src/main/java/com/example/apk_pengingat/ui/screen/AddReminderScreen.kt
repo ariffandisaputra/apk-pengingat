@@ -2,25 +2,34 @@ package com.example.apk_pengingat.ui.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.apk_pengingat.data.model.Reminder
 import com.example.apk_pengingat.data.model.ReminderType
+import com.example.apk_pengingat.data.model.description
+import com.example.apk_pengingat.data.model.label
 import com.example.apk_pengingat.ui.viewmodel.ReminderViewModel
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddReminderScreen(
     viewModel: ReminderViewModel,
@@ -90,19 +99,51 @@ fun AddReminderScreen(
             Text("Jenis Pengingat", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row {
+            FlowRow {
                 ReminderType.entries.forEach { typeOption ->
-                    val label = when (typeOption) {
-                        ReminderType.SIM -> "SIM"
-                        ReminderType.PAJAK_TAHUNAN -> "Pajak Tahunan"
-                        ReminderType.PAJAK_5TAHUN -> "Pajak 5 Tahun"
-                        ReminderType.SERVICE -> "Service"
+                    val label = typeOption.label
+                    val icon = when (typeOption) {
+                        ReminderType.SIM -> Icons.Default.Badge
+                        ReminderType.PAJAK_TAHUNAN -> Icons.Default.Payments
+                        ReminderType.PAJAK_5TAHUN -> Icons.Default.Description
+                        ReminderType.SERVICE -> Icons.Default.Build
                     }
                     FilterChip(
                         selected = type == typeOption,
                         onClick = { type = typeOption },
                         label = { Text(label) },
-                        modifier = Modifier.padding(end = 8.dp)
+                        leadingIcon = {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        modifier = Modifier.padding(end = 8.dp, bottom = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = type.description,
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
@@ -200,10 +241,33 @@ fun AddReminderScreen(
             OutlinedTextField(
                 value = daysBefore,
                 onValueChange = { daysBefore = it.filter { c -> c.isDigit() } },
-                label = { Text("Pengingat Berapa Hari Sebelum") },
+                label = { Text("Pengingat Pertama, Berapa Hari Sebelum") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            val primaryDays = daysBefore.toIntOrNull()?.coerceAtLeast(0) ?: 30
+            val alertOffsets = listOf(primaryDays, (primaryDays / 2).coerceAtLeast(0), 1)
+                .distinct()
+                .sortedDescending()
+            val alertPreview = alertOffsets.joinToString(", ") { "$it hari" }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.CalendarMonth,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Diingatkan 3x: $alertPreview sebelum jatuh tempo",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 

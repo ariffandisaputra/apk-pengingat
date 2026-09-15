@@ -11,6 +11,7 @@ import java.time.ZoneId
 object AlarmScheduler {
 
     private const val REQUEST_CODE_BASE = 1000
+    private const val REPEATS = 3
 
     fun scheduleReminder(
         context: Context,
@@ -18,20 +19,23 @@ object AlarmScheduler {
         expiryDate: LocalDate,
         daysBefore: Int = 30
     ): Long {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val primary = daysBefore.coerceAtLeast(0)
+        val offsets = listOf(primary, (primary / 2).coerceAtLeast(0), 1)
+            .distinct()
+            .sortedDescending()
 
-        val actualReminderDays = daysBefore.coerceAtLeast(0).toLong()
-        val triggerDate = expiryDate.minusDays(actualReminderDays)
-
-        val triggerTime = triggerDate
-            .atTime(9, 0)
-            .atZone(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli()
-
-        scheduleExactOrInexact(context, reminderId, triggerTime)
-
-        return triggerTime
+        var last = 0L
+        offsets.forEachIndexed { index, offsetDays ->
+            val triggerDate = expiryDate.minusDays(offsetDays.toLong())
+            val triggerTime = triggerDate
+                .atTime(9, 0)
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
+            scheduleExactOrInexact(context, reminderId, index, triggerTime)
+            last = triggerTime
+        }
+        return last
     }
 
     fun rescheduleForNotification(
@@ -39,24 +43,24 @@ object AlarmScheduler {
         reminderId: Long,
         expiryDate: LocalDate
     ) {
-        // Set a second alarm on the exact expiry date as a fallback reminder.
-        val triggerTime = expiryDate
-            .atTime(9, 0)
-            .atZone(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli()
-        scheduleExactOrInexact(context, reminderId, triggerTime)
+        scheduleReminder(context, reminderId, expiryDate, 0)
     }
 
-    private fun scheduleExactOrInexact(context: Context, reminderId: Long, triggerTime: Long) {
+    private fun scheduleExactOrInexact(
+        context: Context,
+        reminderId: Long,
+        alertIndex: Int,
+        triggerTime: Long
+    ) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             action = "com.example.apk_pengingat.REMINDER_ALARM"
             putExtra("reminder_id", reminderId)
+            putExtra("alert_index", alertIndex)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            REQUEST_CODE_BASE + reminderId.toInt(),
+            requestCode(reminderId, alertIndex),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -86,17 +90,24 @@ object AlarmScheduler {
 
     fun cancelReminder(context: Context, reminderId: Long) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, ReminderReceiver::class.java).apply {
-            action = "com.example.apk_pengingat.REMINDER_ALARM"
-            putExtra("reminder_id", reminderId)
+        repeat(REPEATS) { alertIndex ->
+            val intent = Intent(context, ReminderReceiver::class.java).apply {
+                action = "com.example.apk_pengingat.REMINDER_ALARM"
+                putExtra("reminder_id", reminderId)
+                putExtra("alert_index", alertIndex)
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                requestCode(reminderId, alertIndex),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(pendingIntent)
+            pendingIntent.cancel()
         }
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            REQUEST_CODE_BASE + reminderId.toInt(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        alarmManager.cancel(pendingIntent)
-        pendingIntent.cancel()
+    }
+
+    private fun requestCode(reminderId: Long, alertIndex: Int): Int {
+        return REQUEST_CODE_BASE + reminderId.toInt() * 10 + alertIndex
     }
 }

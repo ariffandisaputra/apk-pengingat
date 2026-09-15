@@ -4,7 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -101,12 +105,26 @@ fun TypeBadge(type: ReminderType) {
         ReminderType.PAJAK_5TAHUN -> "Pajak 5 Tahun" to Orange500
         ReminderType.SERVICE -> "Service" to Red400
     }
+    val icon = when (type) {
+        ReminderType.SIM -> Icons.Default.Badge
+        ReminderType.PAJAK_TAHUNAN -> Icons.Default.Payments
+        ReminderType.PAJAK_5TAHUN -> Icons.Default.Description
+        ReminderType.SERVICE -> Icons.Default.Build
+    }
 
-    Box(
+    Row(
         modifier = Modifier
             .background(color.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(14.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,

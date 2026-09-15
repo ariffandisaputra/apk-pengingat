@@ -32,7 +32,13 @@ object NotificationHelper {
         notificationManager.createNotificationChannel(channel)
     }
 
-    fun showReminderNotification(context: Context, reminderId: Long, title: String, message: String) {
+    fun showReminderNotification(
+        context: Context,
+        reminderId: Long,
+        alertIndex: Int,
+        title: String,
+        message: String
+    ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val permission = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
             if (permission != PackageManager.PERMISSION_GRANTED) return
@@ -56,7 +62,8 @@ object NotificationHelper {
             .setContentIntent(pendingIntent)
             .build()
 
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID_BASE + reminderId.toInt(), notification)
+        NotificationManagerCompat.from(context)
+            .notify(NOTIFICATION_ID_BASE + reminderId.toInt() * 10 + alertIndex, notification)
     }
 
     fun buildNotificationTitle(type: ReminderType): String {

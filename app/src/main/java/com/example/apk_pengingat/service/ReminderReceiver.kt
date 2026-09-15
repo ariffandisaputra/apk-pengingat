@@ -15,7 +15,8 @@ class ReminderReceiver : BroadcastReceiver() {
         val reminderId = intent.getLongExtra("reminder_id", -1L)
         if (reminderId == -1L) return
 
-        val typeName = intent.getStringExtra("type")
+        val alertIndex = intent.getIntExtra("alert_index", 0)
+        val sequence = "Ingatan ${alertIndex + 1} dari 3"
 
         CoroutineScope(Dispatchers.IO).launch {
             val reminder = AppDatabase.getDatabase(context).reminderDao()
@@ -27,16 +28,23 @@ class ReminderReceiver : BroadcastReceiver() {
             val message = if (reminder.type == ReminderType.SERVICE) {
                 val lastSvc = reminder.lastServiceDate?.toString() ?: "-"
                 val lastKm = reminder.lastServiceKm?.toString() ?: "-"
-                "Service terakhir: $lastSvc | $lastKm km\nJatuh tempo: ${reminder.expiryDate}"
+                "Service terakhir: $lastSvc | $lastKm km\nJatuh tempo: ${reminder.expiryDate}\n$sequence"
             } else {
-                NotificationHelper.buildNotificationMessage(
+                val base = NotificationHelper.buildNotificationMessage(
                     reminder.note,
                     reminder.expiryDate.toString()
                 )
+                "$base\n$sequence"
             }
 
             NotificationHelper.createNotificationChannel(context)
-            NotificationHelper.showReminderNotification(context, reminderId, title, message)
+            NotificationHelper.showReminderNotification(
+                context,
+                reminderId,
+                alertIndex,
+                title,
+                message
+            )
         }
     }
 }
