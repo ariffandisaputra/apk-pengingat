@@ -60,7 +60,9 @@ class PaparazziPreview {
         maxPercentDifference = 0.0
     )
 
-    private val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+    private val app: android.app.Application by lazy {
+        ApplicationProvider.getApplicationContext()
+    }
 
     private val sampleData = listOf(
         sampleReminder(
