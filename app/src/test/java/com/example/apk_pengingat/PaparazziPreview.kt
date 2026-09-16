@@ -1,9 +1,8 @@
 package com.example.apk_pengingat
 
-import androidx.test.platform.app.InstrumentationRegistry
+import android.app.Application
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
-import app.cash.paparazzi.junit.PaparazziTestRunner
 import com.example.apk_pengingat.data.model.Reminder
 import com.example.apk_pengingat.data.model.ReminderType
 import com.example.apk_pengingat.data.repository.ReminderRepository
@@ -16,7 +15,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
 import java.time.LocalDate
+
+private class FakeApplication : Application() {
+    override fun getApplicationContext(): Application = this
+}
 
 private class FakeRepository(private val active: List<Reminder> = emptyList()) : ReminderRepository {
     override val activeReminders: Flow<List<Reminder>> = MutableStateFlow(active)
@@ -51,7 +55,7 @@ private fun sampleReminder(
     detailNote = detailNote
 )
 
-@RunWith(PaparazziTestRunner::class)
+@RunWith(JUnit4::class)
 class PaparazziPreview {
 
     @get:Rule
@@ -61,7 +65,7 @@ class PaparazziPreview {
     )
 
     private val app: android.app.Application by lazy {
-        InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as android.app.Application
+        FakeApplication()
     }
 
     private val sampleData = listOf(
